@@ -1,57 +1,228 @@
 
-import sqlite3
-from pathlib import Path
-from datetime import datetime
-
 import pandas as pd
 import streamlit as st
+import plotly.express as px
+from pathlib import Path
 
 
-# ==========================================
+# ==================================================
 # 1. PROJECT PATHS
-# ==========================================
+# ==================================================
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
-
 AML_FILE = ROOT_DIR / "data/processed/unified_aml_results.csv"
-DB_FILE = ROOT_DIR / "data/processed/aml_cases.db"
-GRAPH_FILE = ROOT_DIR / "reports/graph/account_network.png"
-CYCLE_FILE = ROOT_DIR / "reports/graph/detected_cycles.csv"
 
 
-# ==========================================
+# ==================================================
 # 2. PAGE CONFIGURATION
-# ==========================================
+# ==================================================
 
 st.set_page_config(
-    page_title="AML Monitoring Platform",
+    page_title="Northstar | AML Command Center",
     page_icon="🛡️",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-st.title("🛡️ AML Transaction Monitoring Platform")
-st.caption("Northstar Digital Bank | Transaction Risk & Investigation")
+
+# ==================================================
+# 3. DARK NAVY THEME
+# ==================================================
+
+st.markdown("""
+<style>
+
+/* Main application */
+
+.stApp {
+    background-color: #061626;
+    color: #E5EDF7;
+}
+
+[data-testid="stHeader"] {
+    background-color: #061626;
+}
+
+[data-testid="stMain"] {
+    background-color: #061626;
+}
+
+/* Sidebar */
+
+[data-testid="stSidebar"] {
+    background-color: #0B1D30;
+    border-right: 1px solid #18334D;
+}
+
+[data-testid="stSidebar"] * {
+    color: #E5EDF7;
+}
+
+/* Text */
+
+h1, h2, h3, h4, p, label {
+    color: #E5EDF7;
+}
+
+[data-testid="stCaptionContainer"] {
+    color: #91A9C1;
+}
+
+/* KPI cards */
+
+[data-testid="stMetric"] {
+    background: linear-gradient(145deg, #102B43, #0B1D30);
+    border: 1px solid #1B3B57;
+    border-radius: 12px;
+    padding: 18px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.20);
+}
+
+[data-testid="stMetricLabel"] {
+    color: #91A9C1;
+}
+
+[data-testid="stMetricValue"] {
+    color: #F1F7FF;
+    font-size: 28px;
+    font-weight: 750;
+}
+
+/* Containers */
+
+[data-testid="stVerticalBlockBorderWrapper"] {
+    background-color: #0B1D30;
+    border-color: #1B3B57;
+    border-radius: 12px;
+}
+
+/* Tables */
+
+[data-testid="stDataFrame"] {
+    background-color: #10263D;
+    border: 1px solid #1B3B57;
+    border-radius: 10px;
+}
+
+/* Buttons */
+
+.stDownloadButton button {
+    background-color: #087F83;
+    color: white;
+    border: 1px solid #13B8A6;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.stDownloadButton button:hover {
+    background-color: #13B8A6;
+    color: #061626;
+}
+
+/* Dividers */
+
+hr {
+    border-color: #1B3B57;
+}
+
+/* Input fields */
+
+[data-baseweb="select"] > div {
+    background-color: #10263D;
+    border-color: #1B3B57;
+}
+
+input, textarea {
+    background-color: #10263D !important;
+    color: #E5EDF7 !important;
+}
+
+/* Expanders */
+
+[data-testid="stExpander"] {
+    background-color: #10263D;
+    border: 1px solid #1B3B57;
+    border-radius: 10px;
+}
+
+/* Alerts */
+
+[data-testid="stAlert"] {
+    background-color: #10263D;
+    border: 1px solid #1B3B57;
+}
+
+</style>
+""", unsafe_allow_html=True)
 
 
-# ==========================================
-# 3. LOAD TRANSACTION DATA
-# ==========================================
+# ==================================================
+# 4. SIDEBAR
+# ==================================================
+
+with st.sidebar:
+
+    st.title("🛡️ NORTHSTAR")
+
+    st.markdown(
+        "<span style='color:#13B8A6; "
+        "letter-spacing:3px; font-size:12px;'>"
+        "DIGITAL BANK</span>",
+        unsafe_allow_html=True
+    )
+
+    st.divider()
+
+    st.subheader("🏦 Platform")
+
+    st.caption("AML Transaction Monitoring")
+    st.caption("Financial Crime Detection")
+    st.caption("Risk & Investigation System")
+
+    st.divider()
+
+    st.subheader("⚙️ System Information")
+
+    st.success("DEMO ENVIRONMENT")
+
+    st.caption("Version 1.0")
+    st.caption("Synthetic Transaction Data")
+
+    st.divider()
+
+    st.caption("Northstar Digital Bank")
+    st.caption("AML Monitoring Platform")
+
+
+# ==================================================
+# 5. LOAD TRANSACTION DATA
+# ==================================================
 
 @st.cache_data
 def load_transactions():
+
     return pd.read_csv(AML_FILE)
 
 
 if not AML_FILE.exists():
+
     st.error("Unified AML results file not found!")
+
     st.stop()
+
 
 df = load_transactions()
 
+if df.empty:
 
-# ==========================================
-# 4. DETECT RISK COLUMN
-# ==========================================
+    st.warning("No transaction records available.")
+
+    st.stop()
+
+
+# ==================================================
+# 6. IDENTIFY RISK COLUMN
+# ==================================================
 
 risk_col = (
     "final_risk_level"
@@ -59,55 +230,107 @@ risk_col = (
     else "risk_level"
 )
 
+if risk_col not in df.columns:
 
-# ==========================================
-# 5. IDENTIFY AML ALERTS
-# ==========================================
+    st.error("Risk level column not found!")
+
+    st.stop()
+
+
+# ==================================================
+# 7. IDENTIFY AML ALERTS
+# ==================================================
 
 if "final_alert" in df.columns:
 
-    alert_values = (
+    df["is_aml_alert"] = (
         df["final_alert"]
         .astype(str)
         .str.lower()
         .isin(["true", "1", "yes"])
     )
 
-    alerts = df[alert_values].copy()
-
 else:
 
-    alerts = df[
-        df[risk_col].isin(["High", "Medium"])
-    ].copy()
+    df["is_aml_alert"] = df[risk_col].isin(
+        ["High", "Medium"]
+    )
 
 
-# ==========================================
-# 6. SIDEBAR FILTERS
-# ==========================================
+alerts = df[df["is_aml_alert"]].copy()
 
-st.sidebar.header("Dashboard Filters")
+
+# ==================================================
+# 8. DASHBOARD HEADER
+# ==================================================
+
+st.title("🛡️ AML COMMAND CENTER")
+
+st.caption(
+    "Northstar Digital Bank | "
+    "Real-Time Transaction Risk & Financial Crime Monitoring"
+)
+
+st.divider()
+
+
+# ==================================================
+# 9. DASHBOARD FILTERS
+# ==================================================
+
+st.subheader("🔎 Dashboard Filters")
+
+filter_col1, filter_col2 = st.columns(2)
 
 risk_options = sorted(
     df[risk_col].dropna().unique().tolist()
 )
 
-selected_risks = st.sidebar.multiselect(
-    "Select Risk Level",
-    risk_options,
-    default=risk_options
-)
+with filter_col1:
+
+    selected_risks = st.multiselect(
+        "Select Risk Level",
+        risk_options,
+        default=risk_options
+    )
+
+
+country_options = []
+
+if "country" in df.columns:
+
+    country_options = sorted(
+        df["country"].dropna().unique().tolist()
+    )
+
+
+with filter_col2:
+
+    selected_countries = st.multiselect(
+        "Select Country",
+        country_options,
+        default=country_options
+    )
+
 
 filtered = df[
     df[risk_col].isin(selected_risks)
 ].copy()
 
 
-# ==========================================
-# 7. MAIN DASHBOARD METRICS
-# ==========================================
+if "country" in filtered.columns:
+
+    filtered = filtered[
+        filtered["country"].isin(selected_countries)
+    ]
+
+
+# ==================================================
+# 10. KPI CALCULATIONS
+# ==================================================
 
 total_transactions = len(df)
+
 total_alerts = len(alerts)
 
 high_risk = len(
@@ -118,32 +341,60 @@ medium_risk = len(
     alerts[alerts[risk_col] == "Medium"]
 )
 
+
+# ==================================================
+# 11. PLATFORM OVERVIEW
+# ==================================================
+
+st.divider()
+
+st.subheader("📊 Platform Overview")
+
 col1, col2, col3, col4 = st.columns(4)
 
-col1.metric(
-    "Total Transactions",
-    f"{total_transactions:,}"
-)
+with col1:
 
-col2.metric(
-    "Total AML Alerts",
-    f"{total_alerts:,}"
-)
+    with st.container(border=True):
 
-col3.metric(
-    "High Risk Alerts",
-    f"{high_risk:,}"
-)
-
-col4.metric(
-    "Medium Risk Alerts",
-    f"{medium_risk:,}"
-)
+        st.metric(
+            label="💳 Total Transactions",
+            value=f"{total_transactions:,}"
+        )
 
 
-# ==========================================
-# 8. RISK LEVEL DISTRIBUTION
-# ==========================================
+with col2:
+
+    with st.container(border=True):
+
+        st.metric(
+            label="🚨 Total AML Alerts",
+            value=f"{total_alerts:,}"
+        )
+
+
+with col3:
+
+    with st.container(border=True):
+
+        st.metric(
+            label="🔴 High Risk Alerts",
+            value=f"{high_risk:,}"
+        )
+
+
+with col4:
+
+    with st.container(border=True):
+
+        st.metric(
+            label="🟠 Medium Risk Alerts",
+            value=f"{medium_risk:,}"
+        )
+
+
+# ==================================================
+# 12. RISK LEVEL DISTRIBUTION
+# ==================================================
 
 st.divider()
 
@@ -152,111 +403,259 @@ st.subheader("📊 Risk Level Distribution")
 risk_counts = (
     filtered[risk_col]
     .value_counts()
-    .reindex(["Low", "Medium", "High"], fill_value=0)
+    .reindex(
+        ["Low", "Medium", "High"],
+        fill_value=0
+    )
+    .rename_axis("Risk Level")
+    .reset_index(name="Transactions")
 )
 
-st.bar_chart(risk_counts)
+
+risk_fig = px.pie(
+    risk_counts,
+    names="Risk Level",
+    values="Transactions",
+    hole=0.65,
+    color="Risk Level",
+    color_discrete_map={
+        "Low": "#13B889",
+        "Medium": "#E99A32",
+        "High": "#E34B55"
+    }
+)
+
+risk_fig.update_traces(
+    textinfo="percent",
+    textfont=dict(
+        color="#FFFFFF",
+        size=13
+    ),
+    marker=dict(
+        line=dict(
+            color="#061626",
+            width=3
+        )
+    )
+)
+
+risk_fig.update_layout(
+    template="plotly_dark",
+    paper_bgcolor="#061626",
+    plot_bgcolor="#061626",
+    font=dict(color="#DCE8F5"),
+    height=350,
+    margin=dict(t=25, b=20, l=10, r=10),
+    legend_title_text="Risk Level"
+)
+
+st.plotly_chart(
+    risk_fig,
+    use_container_width=True
+)
 
 
-# ==========================================
-# 9. DAILY TRANSACTION TRENDS
-# ==========================================
+# ==================================================
+# 13. DAILY TRANSACTION TRENDS
+# ==================================================
 
 st.divider()
 
 st.subheader("📈 Daily Transaction Trends")
 
-trend_df = df.copy()
+if "transaction_date" in filtered.columns:
 
-trend_df["transaction_date"] = pd.to_datetime(
-    trend_df["transaction_date"],
-    errors="coerce"
-)
+    trend_df = filtered.copy()
 
-daily_transactions = (
-    trend_df.dropna(subset=["transaction_date"])
-    .assign(
-        transaction_day=lambda x: x["transaction_date"].dt.date
+    trend_df["transaction_date"] = pd.to_datetime(
+        trend_df["transaction_date"],
+        errors="coerce"
     )
-    .groupby("transaction_day")
-    .size()
-    .reset_index(name="total_transactions")
-)
 
-daily_transactions = daily_transactions.sort_values(
-    "transaction_day"
-)
-
-if not daily_transactions.empty:
-
-    st.line_chart(
-        daily_transactions.set_index("transaction_day")
+    daily_transactions = (
+        trend_df.dropna(
+            subset=["transaction_date"]
+        )
+        .assign(
+            transaction_day=lambda x:
+            x["transaction_date"].dt.date
+        )
+        .groupby("transaction_day")
+        .size()
+        .reset_index(name="Transactions")
     )
+
+    daily_transactions = daily_transactions.sort_values(
+        "transaction_day"
+    )
+
+    if not daily_transactions.empty:
+
+        trend_fig = px.area(
+            daily_transactions,
+            x="transaction_day",
+            y="Transactions",
+            markers=True
+        )
+
+        trend_fig.update_traces(
+            line=dict(
+                color="#13B8A6",
+                width=2
+            ),
+            fillcolor="rgba(19,184,166,0.15)",
+            marker=dict(size=5)
+        )
+
+        trend_fig.update_layout(
+            template="plotly_dark",
+            paper_bgcolor="#061626",
+            plot_bgcolor="#10263D",
+            font=dict(color="#DCE8F5"),
+            height=350,
+            xaxis_title="Transaction Date",
+            yaxis_title="Number of Transactions",
+            margin=dict(t=20, b=20),
+            hovermode="x unified"
+        )
+
+        st.plotly_chart(
+            trend_fig,
+            use_container_width=True
+        )
+
+    else:
+
+        st.info("No valid transaction dates available.")
 
 else:
 
-    st.info("No valid transaction dates available.")
+    st.info("Transaction date column is unavailable.")
 
 
-# ==========================================
-# 10. COUNTRY-WISE RISK ANALYSIS
-# ==========================================
+# ==================================================
+# 14. COUNTRY-WISE RISK ANALYSIS
+# ==================================================
 
 st.divider()
 
 st.subheader("🌍 Country-wise Risk Analysis")
 
-country_df = df.copy()
+if "country" in filtered.columns:
 
-country_df["is_aml_alert"] = (
-    country_df["final_alert"]
-    .astype(str)
-    .str.lower()
-    .isin(["true", "1", "yes"])
-)
-
-country_analysis = (
-    country_df.groupby("country")
-    .agg(
-        total_transactions=("transaction_id", "count"),
-        total_alerts=("is_aml_alert", "sum")
+    country_analysis = (
+        filtered.groupby("country")
+        .agg(
+            total_transactions=("transaction_id", "count"),
+            total_alerts=("is_aml_alert", "sum")
+        )
+        .reset_index()
+        .sort_values(
+            "total_alerts",
+            ascending=False
+        )
     )
-    .reset_index()
-)
 
-st.write("**Total Transactions by Country**")
+    country_col1, country_col2 = st.columns(2)
 
-st.bar_chart(
-    country_analysis.set_index("country")[
-        "total_transactions"
-    ].sort_values(ascending=False)
-)
+    with country_col1:
 
-st.write("**AML Alerts by Country**")
+        st.markdown("**Transaction Volume by Country**")
 
-st.bar_chart(
-    country_analysis.set_index("country")[
-        "total_alerts"
-    ].sort_values(ascending=False)
-)
+        country_fig = px.bar(
+            country_analysis.sort_values(
+                "total_transactions",
+                ascending=False
+            ),
+            x="country",
+            y="total_transactions",
+            color_discrete_sequence=["#2495D0"]
+        )
 
-st.dataframe(
-    country_analysis.sort_values(
-        "total_alerts",
-        ascending=False
-    ),
-    use_container_width=True,
-    hide_index=True
-)
+        country_fig.update_layout(
+            template="plotly_dark",
+            paper_bgcolor="#061626",
+            plot_bgcolor="#10263D",
+            font=dict(color="#DCE8F5"),
+            height=330,
+            xaxis_title="Country",
+            yaxis_title="Transactions",
+            margin=dict(t=20, b=20)
+        )
+
+        st.plotly_chart(
+            country_fig,
+            use_container_width=True
+        )
+
+    with country_col2:
+
+        st.markdown("**AML Alerts by Country**")
+
+        alert_fig = px.bar(
+            country_analysis.sort_values(
+                "total_alerts",
+                ascending=False
+            ),
+            x="country",
+            y="total_alerts",
+            color_discrete_sequence=["#E99A32"]
+        )
+
+        alert_fig.update_layout(
+            template="plotly_dark",
+            paper_bgcolor="#061626",
+            plot_bgcolor="#10263D",
+            font=dict(color="#DCE8F5"),
+            height=330,
+            xaxis_title="Country",
+            yaxis_title="AML Alerts",
+            margin=dict(t=20, b=20)
+        )
+
+        st.plotly_chart(
+            alert_fig,
+            use_container_width=True
+        )
+
+    with st.expander("View Country Analysis Table"):
+
+        st.dataframe(
+            country_analysis,
+            use_container_width=True,
+            hide_index=True
+        )
+
+else:
+
+    st.info("Country information is unavailable.")
 
 
-# ==========================================
-# 10. AML ALERT TRANSACTIONS
-# ==========================================
+# ==================================================
+# 15. RECENT AML ALERTS
+# ==================================================
 
 st.divider()
 
-st.subheader("🚨 AML Alert Transactions")
+st.subheader("🚨 Recent AML Alerts")
+
+recent_alerts = filtered[
+    filtered["is_aml_alert"]
+].copy()
+
+
+if "transaction_date" in recent_alerts.columns:
+
+    recent_alerts["transaction_date"] = pd.to_datetime(
+        recent_alerts["transaction_date"],
+        errors="coerce"
+    )
+
+    recent_alerts = recent_alerts.sort_values(
+        "transaction_date",
+        ascending=False
+    )
+
 
 display_columns = [
     col for col in [
@@ -265,347 +664,60 @@ display_columns = [
         "transaction_amount",
         "transaction_type",
         risk_col,
-        "rule_risk_score",
         "combined_risk_score",
         "final_alert_reason",
-        "alert_reason"
+        "alert_reason",
+        "transaction_date"
     ]
-    if col in filtered.columns
+    if col in recent_alerts.columns
 ]
 
-alert_view = filtered[
-    filtered["transaction_id"].isin(
-        alerts["transaction_id"]
-    )
-][display_columns]
+
+st.caption(
+    f"Showing up to 10 recent alerts from "
+    f"{len(recent_alerts):,} filtered alerts."
+)
+
 
 st.dataframe(
-    alert_view,
+    recent_alerts[display_columns].head(10),
     use_container_width=True,
     hide_index=True
 )
 
 
-# ==========================================
-# AML ALERT CSV DOWNLOAD
-# ==========================================
+# ==================================================
+# 16. DOWNLOAD AML REPORT
+# ==================================================
 
-st.subheader("📥 Download AML Alert Report")
+csv_data = recent_alerts[
+    display_columns
+].to_csv(
+    index=False
+).encode("utf-8")
 
-csv_data = alert_view.to_csv(index=False).encode("utf-8")
 
 st.download_button(
-    label="Download AML Alerts CSV",
+    label="📥 Download AML Alert Report",
     data=csv_data,
     file_name="aml_alert_report.csv",
     mime="text/csv"
 )
 
 
-# ==========================================
-# 11. CASE MANAGEMENT
-# ==========================================
+# ==================================================
+# 17. FOOTER
+# ==================================================
 
 st.divider()
 
-st.subheader("📁 Investigation Case Management")
-
-if DB_FILE.exists():
-
-    connection = sqlite3.connect(DB_FILE)
-
-    cases = pd.read_sql_query("""
-        SELECT
-            case_id,
-            transaction_id,
-            account_id,
-            transaction_amount,
-            risk_level,
-            status,
-            assigned_to,
-            decision,
-            created_at
-        FROM cases
-        ORDER BY created_at DESC
-    """, connection)
-
-    audit_cases = pd.read_sql_query("""
-        SELECT
-            case_id,
-            action,
-            details,
-            timestamp
-        FROM audit_log
-        ORDER BY audit_id DESC
-    """, connection)
-
-    connection.close()
-
-    # Case Metrics
-
-    case_col1, case_col2, case_col3 = st.columns(3)
-
-    case_col1.metric(
-        "Total Cases",
-        len(cases)
-    )
-
-    case_col2.metric(
-        "Open Cases",
-        len(cases[cases["status"] == "Open"])
-    )
-
-    case_col3.metric(
-        "Under Investigation",
-        len(
-            cases[
-                cases["status"] == "Under Investigation"
-            ]
-        )
-    )
-
-    st.dataframe(
-        cases,
-        use_container_width=True,
-        hide_index=True
-    )
-
-
-    # ======================================
-    # 12. CASE AUDIT HISTORY
-    # ======================================
-
-    st.subheader("📝 Case Audit History")
-
-    if not cases.empty:
-
-        selected_case = st.selectbox(
-            "Select Case ID",
-            cases["case_id"].tolist()
-        )
-
-        history = audit_cases[
-            audit_cases["case_id"] == selected_case
-        ]
-
-        st.dataframe(
-            history,
-            use_container_width=True,
-            hide_index=True
-        )
-
-    else:
-
-        st.info("No investigation cases available.")
-
-
-    # ======================================
-    # 13. INTERACTIVE CASE INVESTIGATION
-    # ======================================
-
-    st.divider()
-
-    st.subheader("🕵️ Update Investigation Case")
-
-    if not cases.empty:
-
-        with st.form("case_update_form"):
-
-            update_case_id = st.selectbox(
-                "Select Case to Update",
-                cases["case_id"].tolist()
-            )
-
-            investigator = st.text_input(
-                "Investigator Name",
-                value="Gomathi"
-            )
-
-            new_status = st.selectbox(
-                "Update Case Status",
-                [
-                    "Open",
-                    "Under Investigation",
-                    "Closed"
-                ]
-            )
-
-            investigation_notes = st.text_area(
-                "Investigation Notes"
-            )
-
-            decision = st.selectbox(
-                "Investigation Decision",
-                [
-                    "Pending",
-                    "Suspicious Activity",
-                    "False Positive",
-                    "Escalated"
-                ]
-            )
-
-            submitted = st.form_submit_button(
-                "Save Investigation Update"
-            )
-
-            if submitted:
-
-                if not investigator.strip():
-
-                    st.error(
-                        "Investigator name is required."
-                    )
-
-                else:
-
-                    timestamp = datetime.now().isoformat(
-                        timespec="seconds"
-                    )
-
-                    connection = sqlite3.connect(DB_FILE)
-                    cursor = connection.cursor()
-
-                    cursor.execute("""
-                        UPDATE cases
-                        SET assigned_to = ?,
-                            status = ?,
-                            investigator_notes = ?,
-                            decision = ?,
-                            updated_at = ?
-                        WHERE case_id = ?
-                    """, (
-                        investigator.strip(),
-                        new_status,
-                        investigation_notes,
-                        decision,
-                        timestamp,
-                        update_case_id
-                    ))
-
-                    cursor.execute("""
-                        INSERT INTO audit_log (
-                            case_id,
-                            action,
-                            details,
-                            timestamp
-                        )
-                        VALUES (?, ?, ?, ?)
-                    """, (
-                        update_case_id,
-                        "CASE_UPDATED",
-                        f"Investigator: {investigator.strip()}; "
-                        f"Status: {new_status}; "
-                        f"Decision: {decision}; "
-                        f"Notes: {investigation_notes}",
-                        timestamp
-                    ))
-
-                    connection.commit()
-                    connection.close()
-
-                    st.success(
-                        f"{update_case_id} updated successfully!"
-                    )
-
-                    st.cache_data.clear()
-                    st.rerun()
-
-else:
-
-    st.warning(
-        "Case database not found. Run case_manager.py first."
-    )
-
-
-# ==========================================
-# 14. CIRCULAR TRANSFER ALERTS
-# ==========================================
-
-st.divider()
-
-st.subheader("🔄 Circular Transfer Alerts")
-
-if CYCLE_FILE.exists():
-
-    cycles_df = pd.read_csv(CYCLE_FILE)
-
-    if not cycles_df.empty:
-
-        total_cycles = len(cycles_df)
-
-        unique_accounts = set()
-
-        for sequence in cycles_df["account_sequence"].dropna():
-            accounts = sequence.split(" -> ")
-            unique_accounts.update(accounts)
-
-        total_accounts = len(unique_accounts)
-
-        col1, col2 = st.columns(2)
-
-        col1.metric(
-            "Detected Circular Networks",
-            total_cycles
-        )
-
-        col2.metric(
-            "Accounts Involved",
-            total_accounts
-        )
-
-        st.write("**Detected Circular Account Networks**")
-
-        st.dataframe(
-            cycles_df,
-            use_container_width=True,
-            hide_index=True
-        )
-
-        st.warning(
-            "Circular transaction patterns require investigation. "
-            "They do not independently prove money laundering."
-        )
-
-    else:
-
-        st.info("No circular transfer networks detected.")
-
-else:
-
-    st.info("Circular network report not found.")
-
-
-# ==========================================
-# 14. ACCOUNT NETWORK GRAPH
-# ==========================================
-
-st.divider()
-
-st.subheader("🔗 Account Network Analysis")
-
-if GRAPH_FILE.exists():
-
-    st.image(
-        str(GRAPH_FILE),
-        caption="High-value transfer account network",
-        use_container_width=True
-    )
-
-else:
-
-    st.info(
-        "Account network graph is not available."
-    )
-
-
-# ==========================================
-# 15. DISCLAIMER
-# ==========================================
-
-st.divider()
+st.markdown("### 🛡️ NORTHSTAR DIGITAL BANK")
 
 st.caption(
-    "Educational demo using synthetic transactions. "
-    "AML alerts indicate transactions requiring review, "
-    "not confirmed money laundering."
+    "AML Transaction Monitoring & Investigation Platform"
+)
+
+st.caption(
+    "Educational demonstration using synthetic transaction data. "
+    "AML alerts require investigation and do not confirm financial crime."
 )
