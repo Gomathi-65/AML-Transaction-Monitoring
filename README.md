@@ -64,6 +64,10 @@ It provides an interactive investigation workspace where analysts can review AML
 
 *Note: Rule alerts and ML anomalies can overlap. Therefore, their individual counts do not add up to the final alert count.*
 
+### Main Dashboard
+
+![Northstar AML Main Dashboard](screenshots/main_dashboard.png)
+
 ## 🖥️ Dashboard Modules
 
 The Streamlit application contains nine pages:
