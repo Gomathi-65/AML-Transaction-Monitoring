@@ -1,51 +1,84 @@
-# Real-Time AML Transaction Monitoring & Investigation Platform
+# 🛡️ Real-Time AML Transaction Monitoring & Investigation Platform
 
-## Project Overview
+An end-to-end Anti-Money Laundering (AML) monitoring and investigation platform built using Python, Machine Learning, Network Analytics, and Streamlit.
 
-An end-to-end Anti-Money Laundering (AML) monitoring platform that identifies potentially suspicious financial transactions using rule-based monitoring, Machine Learning anomaly detection, unified risk scoring, and account network analysis.
+**Organization:** Northstar Digital Bank (Fictional)  
+**Project Type:** Data Science | Machine Learning | Financial Crime Analytics
 
-The platform also provides case management, investigator actions, audit history, and an interactive Streamlit dashboard.
+## 📌 Project Overview
 
-**Organization:** Northstar Digital Bank (Fictional)
+The platform identifies potentially suspicious financial transactions using rule-based monitoring, Machine Learning anomaly detection, unified risk scoring, and account network analysis.
 
-## Key Features
+It provides an interactive investigation workspace where analysts can review AML alerts, examine customer transaction activity, manage investigation cases, record decisions, and maintain audit history.
+
+## 🎯 Key Features
 
 - Synthetic transaction data generation (10,000 records)
-- Rule-based AML monitoring
+- Rule-based AML transaction monitoring
 - Isolation Forest anomaly detection
 - Unified transaction risk scoring
 - Account network analysis using NetworkX
 - Circular transaction pattern detection
-- SQLite-based case management
-- Investigator case updates and audit logging
-- Interactive Streamlit dashboard
-- AML alert CSV export
+- Customer transaction profiling
+- AML alert investigation
+- Case management and investigator actions
+- Audit logging and investigation history
+- ML model monitoring dashboard
+- Interactive Streamlit dashboard with 9 pages
+- CSV export for AML alerts and analytical reports
 
-## Technology Stack
+## 🛠️ Technology Stack
 
-- Python
-- Pandas, NumPy
-- Scikit-learn
-- NetworkX
-- SQLite
-- Streamlit
-- Matplotlib
+| Category | Technologies |
+|---|---|
+| Programming Language | Python |
+| Data Processing | Pandas, NumPy |
+| Machine Learning | Scikit-learn, Isolation Forest |
+| Network Analytics | NetworkX |
+| Data Visualization | Plotly, Matplotlib |
+| Database | SQLite |
+| Dashboard | Streamlit |
+| Development Tools | VS Code, Git, GitHub |
 
-## Project Results
+## ⚙️ Project Workflow
 
-- Total transactions: 10,000
-- Rule-based alerts: 180
-- ML anomalies: 200
-- Final AML alerts: 362
-- Detected circular networks: 5
-- Accounts involved in detected cycles: 20
-- Cases created: 362
+1. **Data Generation:** Generate 10,000 synthetic financial transactions.
+2. **Rule-Based Monitoring:** Apply illustrative AML rules to identify suspicious transaction patterns.
+3. **ML Anomaly Detection:** Use Isolation Forest to identify unusual transaction behavior.
+4. **Unified Risk Scoring:** Combine rule-based scores and ML anomaly signals.
+5. **Network Analysis:** Analyze account relationships and identify circular transfer patterns.
+6. **Case Management:** Convert alerts into investigation cases and record investigator actions.
+7. **Dashboard:** Present alerts, risk analysis, customer profiles, investigation cases, and network insights.
 
-## Disclaimer
+## 📊 Project Results
 
-This is an educational portfolio project using synthetic transaction data. Alerts indicate potentially suspicious patterns requiring further investigation; they do not establish money laundering or criminal activity. The rules and thresholds are illustrative and are not real banking compliance standards.
+| Metric | Result |
+|---|---:|
+| Total Transactions | 10,000 |
+| Rule-Based Alerts | 180 |
+| ML Anomalies | 200 |
+| Final AML Alerts | 362 |
+| Circular Networks Detected | 5 |
+| Accounts Involved in Detected Cycles | 20 |
+| Investigation Cases Created | 362 |
 
-## Project Structure
+*Note: Rule alerts and ML anomalies can overlap. Therefore, their individual counts do not add up to the final alert count.*
+
+## 🖥️ Dashboard Modules
+
+The Streamlit application contains nine pages:
+
+1. AML Command Center – Main Dashboard
+2. Alert Queue
+3. Alert Investigation
+4. Customer Profile
+5. Case Management
+6. AML Scenario Management
+7. ML Model Monitoring
+8. Circular Transfer Analysis
+9. Account Network Analysis
+
+## 📁 Project Structure
 
 ```text
 AML-Transaction-Monitoring/
@@ -53,12 +86,7 @@ AML-Transaction-Monitoring/
 ├── data/
 │   ├── raw/
 │   ├── processed/
-│   │   ├── aml_rule_results.csv
-│   │   ├── ml_anomaly_results.csv
-│   │   ├── unified_aml_results.csv
-│   │   └── aml_cases.db
 │   └── synthetic/
-│       └── transactions.csv
 │
 ├── src/
 │   ├── data_generation/
@@ -72,38 +100,84 @@ AML-Transaction-Monitoring/
 │   └── aml_isolation_forest.pkl
 │
 ├── dashboard/
-│   └── app.py
+│   ├── app.py
+│   └── pages/
+│       ├── 2_Alert_Queue.py
+│       ├── 3_Alert_Investigation.py
+│       ├── 4_Customer_Profile.py
+│       ├── 5_Case_Management.py
+│       ├── 6_AML_Scenario_Management.py
+│       ├── 7_ML_Model_Monitoring.py
+│       ├── 8_Circular_Transfer_Analysis.py
+│       └── 9_Account_Network_Analysis.py
 │
 ├── reports/
 │   └── graph/
 │       ├── account_network.png
+│       ├── account_network_metrics.csv
 │       └── detected_cycles.csv
 │
 ├── tests/
 ├── requirements.txt
+├── .gitignore
 └── README.md
 ```
 
-## Installation
+*The SQLite case database is maintained locally and excluded from Git tracking.*
+
+## 🚀 Installation and Setup
+
+### 1. Clone the Repository
 
 ```bash
-git clone <your-github-repository-url>
+git clone https://github.com/Gomathi-65/AML-Transaction-Monitoring.git
 cd AML-Transaction-Monitoring
+```
 
+### 2. Create a Virtual Environment
+
+```bash
 python -m venv .venv
+```
 
-# Windows PowerShell
+### 3. Activate the Environment
+
+Windows PowerShell:
+
+```powershell
 .venv\Scripts\Activate.ps1
+```
 
+### 4. Install Dependencies
+
+```bash
 pip install -r requirements.txt
 ```
 
-## Run the Dashboard
+### 5. Run the Dashboard
 
 ```bash
 streamlit run dashboard/app.py
 ```
 
-Open the dashboard at:
+Open your browser:
 
-http://localhost:8501
+`http://localhost:8501`
+
+## 🔒 Disclaimer
+
+This is an educational portfolio project developed using synthetic transaction data. It is not a production banking or regulatory compliance system.
+
+Detected alerts represent potentially suspicious patterns that require further investigation. They do not establish money laundering or criminal activity.
+
+The detection rules, thresholds, and ML results are illustrative and should not be interpreted as real-world AML compliance standards or validated financial crime detection performance.
+
+## 👩‍💻 Author
+
+**Gomathi Murugan**
+
+B.Com Graduate | Data Science Learner
+
+GitHub: [Gomathi-65](https://github.com/Gomathi-65)
+
+LinkedIn: [Gomathi Murugan](https://linkedin.com/in/gomathimurugan-90b87a310)
