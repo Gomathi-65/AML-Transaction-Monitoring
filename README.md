@@ -68,19 +68,35 @@ It provides an interactive investigation workspace where analysts can review AML
 
 ![Northstar AML Main Dashboard](screenshots/main_dashboard.png)
 
-## 🖥️ Dashboard Modules
 
-The Streamlit application contains nine pages:
+## 🖥️ Dashboard Screenshots
 
-1. AML Command Center – Main Dashboard
-2. Alert Queue
-3. Alert Investigation
-4. Customer Profile
-5. Case Management
-6. AML Scenario Management
-7. ML Model Monitoring
-8. Circular Transfer Analysis
-9. Account Network Analysis
+### 1. Main Dashboard
+![Main Dashboard](screenshots/main_dashboard.png)
+
+### 2. Alert Queue
+![Alert Queue](screenshots/alert_queue.png)
+
+### 3. Alert Investigation
+![Alert Investigation](screenshots/alert_investigation.png)
+
+### 4. Customer Profile
+![Customer Profile](screenshots/customer_profile.png)
+
+### 5. Case Management
+![Case Management](screenshots/case_management.png)
+
+### 6. AML Scenario Management
+![AML Scenario Management](screenshots/aml_scenario_management.png)
+
+### 7. ML Model Monitoring
+![ML Model Monitoring](screenshots/ml_model_monitoring.png)
+
+### 8. Circular Transfer Analysis
+![Circular Transfer Analysis](screenshots/circular_transfer_analysis.png)
+
+### 9. Account Network Analysis
+![Account Network Analysis](screenshots/account_network_analysis.png)
 
 ## 📁 Project Structure
 
